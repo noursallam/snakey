@@ -2,74 +2,85 @@ import pygame
 import random
 import os
 
-# Initialize Pygame
+# تهيئة مكتبة Pygame
 pygame.init()
 
-# Screen Dimensions
-WIDTH = 800
-HEIGHT = 600
-GRID_SIZE = 20
-GRID_WIDTH = WIDTH // GRID_SIZE
-GRID_HEIGHT = HEIGHT // GRID_SIZE
+# أبعاد الشاشة
+WIDTH = 800  # عرض الشاشة
+HEIGHT = 600  # ارتفاع الشاشة
+GRID_SIZE = 20  # حجم كل خلية في الشبكة
+GRID_WIDTH = WIDTH // GRID_SIZE  # عدد الأعمدة في الشبكة
+GRID_HEIGHT = HEIGHT // GRID_SIZE  # عدد الصفوف في الشبكة
 
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-GRID_COLOR = (50, 50, 50)  # Dark gray for grid lines
+# الألوان (RGB)
+BLACK = (0, 0, 0)  # لون أسود
+WHITE = (255, 255, 255)  # لون أبيض
+RED = (255, 0, 0)  # لون أحمر
+GREEN = (0, 255, 0)  # لون أخضر
+BLUE = (0, 0, 255)  # لون أزرق
+GRID_COLOR = (50, 50, 50)  # لون الشبكة (رمادي غامق)
 
-# Game Screen
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Snake Game')
+# إعداد شاشة اللعبة
+screen = pygame.display.set_mode((WIDTH, HEIGHT))  # إنشاء نافذة بحجم العرض والارتفاع
+pygame.display.set_caption('Snake Game')  # تعيين عنوان النافذة
 
-# Clock to control game speed
+# ساعة للتحكم في سرعة اللعبة
 clock = pygame.time.Clock()
 
+# تعريف كائن الثعبان
 class Snake:
     def __init__(self):
+        # جسم الثعبان يبدأ بمربع واحد في منتصف الشبكة
         self.body = [(GRID_WIDTH // 2, GRID_HEIGHT // 2)]
-        self.direction = (1, 0)
-        self.grow_to = 0
+        self.direction = (1, 0)  # اتجاه الثعبان (يمين)
+        self.grow_to = 0  # عدد المربعات التي سينمو بها الثعبان
 
     def move(self):
+        # حساب موقع الرأس الجديد للثعبان
         head = self.body[0]
         new_head = (head[0] + self.direction[0], head[1] + self.direction[1])
-        self.body.insert(0, new_head)
-        
+        self.body.insert(0, new_head)  # إضافة الرأس الجديد إلى الجسم
+
+        # إذا كان الثعبان سينمو، نخفض عداد النمو
         if self.grow_to > 0:
             self.grow_to -= 1
         else:
-            self.body.pop()
+            self.body.pop()  # إزالة آخر جزء في الجسم
 
     def grow(self):
+        # زيادة عدد المربعات التي سينمو بها الثعبان
         self.grow_to += 1
 
     def check_collision(self):
+        # الحصول على رأس الثعبان
         head = self.body[0]
-        # Wall collision
+
+        # التحقق من الاصطدام بالجدار
         if (head[0] < 0 or head[0] >= GRID_WIDTH or 
             head[1] < 0 or head[1] >= GRID_HEIGHT):
             return True
-        
-        # Self collision
+
+        # التحقق من الاصطدام بجسم الثعبان نفسه
         if head in self.body[1:]:
             return True
-        
-        return False
+
+        return False  # لا يوجد اصطدام
 
     def draw(self, screen):
+        # رسم أجزاء جسم الثعبان
         for segment in self.body:
             pygame.draw.rect(screen, GREEN, 
                              (segment[0]*GRID_SIZE, segment[1]*GRID_SIZE, 
                               GRID_SIZE-1, GRID_SIZE-1))
 
+# تعريف كائن الطعام
 class Food:
     def __init__(self, snake):
+        # تحديد موقع عشوائي للطعام بعيداً عن الثعبان
         self.position = self.generate_position(snake)
 
     def generate_position(self, snake):
+        # توليد موقع جديد للطعام
         while True:
             position = (random.randint(0, GRID_WIDTH-1), 
                         random.randint(0, GRID_HEIGHT-1))
@@ -77,48 +88,52 @@ class Food:
                 return position
 
     def draw(self, screen):
+        # رسم الطعام
         pygame.draw.rect(screen, RED, 
                          (self.position[0]*GRID_SIZE, self.position[1]*GRID_SIZE, 
                           GRID_SIZE-1, GRID_SIZE-1))
 
+# رسم الشبكة
 def draw_grid(screen):
-    # Vertical lines
+    # رسم الخطوط العمودية
     for x in range(0, WIDTH, GRID_SIZE):
         pygame.draw.line(screen, GRID_COLOR, (x, 0), (x, HEIGHT))
     
-    # Horizontal lines
+    # رسم الخطوط الأفقية
     for y in range(0, HEIGHT, GRID_SIZE):
         pygame.draw.line(screen, GRID_COLOR, (0, y), (WIDTH, y))
 
+# تحميل صورة الخلفية
 def load_background_image(image_path):
     try:
-        # Load the background image
+        # تحميل صورة الخلفية
         background = pygame.image.load(image_path)
-        # Scale the image to fit the screen
+        # تغيير حجم الصورة لتتناسب مع الشاشة
         background = pygame.transform.scale(background, (WIDTH, HEIGHT))
         return background
     except pygame.error:
         print(f"Cannot load image: {image_path}")
-        # Return a default surface if image loading fails
+        # إرجاع سطح فارغ إذا فشل تحميل الصورة
         return pygame.Surface((WIDTH, HEIGHT))
 
+# الدالة الرئيسية للعبة
 def main(background_image_path=None):
-    # Load background image if provided
+    # تحميل صورة الخلفية إذا تم تحديدها
     background = load_background_image(background_image_path) if background_image_path else None
     
-    snake = Snake()
-    food = Food(snake)
-    score = 0
-    font = pygame.font.Font(None, 36)
+    snake = Snake()  # إنشاء كائن الثعبان
+    food = Food(snake)  # إنشاء كائن الطعام
+    score = 0  # النقاط
+    font = pygame.font.Font(None, 36)  # إعداد الخط لعرض النقاط
 
     running = True
     while running:
-        # Event handling
+        # التعامل مع الأحداث
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT:  # الخروج من اللعبة
                 running = False
             
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:  # عند الضغط على أزرار الاتجاهات
                 if event.key == pygame.K_UP and snake.direction != (0, 1):
                     snake.direction = (0, -1)
                 elif event.key == pygame.K_DOWN and snake.direction != (0, -1):
@@ -128,54 +143,47 @@ def main(background_image_path=None):
                 elif event.key == pygame.K_RIGHT and snake.direction != (-1, 0):
                     snake.direction = (1, 0)
 
-        # Move snake
-        snake.move()
+        snake.move()  # تحريك الثعبان
 
-        # Check food collision
+        # التحقق من تناول الطعام
         if snake.body[0] == food.position:
-            snake.grow()
-            food = Food(snake)
-            score += 1
+            snake.grow()  # زيادة طول الثعبان
+            food = Food(snake)  # إنشاء طعام جديد
+            score += 1  # زيادة النقاط
 
-        # Check game over
+        # التحقق من انتهاء اللعبة
         if snake.check_collision():
             running = False
 
-        # Drawing
-        # First draw the background (if exists)
+        # الرسم
         if background:
-            screen.blit(background, (0, 0))
+            screen.blit(background, (0, 0))  # رسم الخلفية
         else:
-            screen.fill(BLACK)
+            screen.fill(BLACK)  # ملء الشاشة باللون الأسود
 
-        # Draw grid
-        draw_grid(screen)
+        draw_grid(screen)  # رسم الشبكة
+        snake.draw(screen)  # رسم الثعبان
+        food.draw(screen)  # رسم الطعام
 
-        snake.draw(screen)
-        food.draw(screen)
-
-        # Draw score
+        # عرض النقاط
         score_text = font.render(f'Score: {score}', True, WHITE)
         screen.blit(score_text, (10, 10))
 
-        # Update display
-        pygame.display.flip()
+        pygame.display.flip()  # تحديث الشاشة
 
-        # Control game speed
-        clock.tick(10)
+        clock.tick(10)  # التحكم في سرعة اللعبة
 
-    # Game over screen
-    screen.fill(BLACK)
-    game_over_text = font.render('Game Over!', True, WHITE)
-    final_score_text = font.render(f'Final Score: {score}', True, WHITE)
+    # شاشة انتهاء اللعبة
+    screen.fill(BLACK)  # مسح الشاشة باللون الأسود
+    game_over_text = font.render('Game Over!', True, WHITE)  # رسالة انتهاء اللعبة
+    final_score_text = font.render(f'Final Score: {score}', True, WHITE)  # عرض النقاط النهائية
     screen.blit(game_over_text, (WIDTH//2 - 100, HEIGHT//2 - 50))
     screen.blit(final_score_text, (WIDTH//2 - 100, HEIGHT//2 + 50))
     pygame.display.flip()
 
-    # Wait before closing
-    pygame.time.wait(2000)
+    pygame.time.wait(2000)  # انتظار قبل الإغلاق
     pygame.quit()
 
+# تشغيل اللعبة مع صورة خلفية
 if __name__ == "__main__":
-    # Run with the background image 'bg.png'
     main('bg.png')
