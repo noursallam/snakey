@@ -1,137 +1,137 @@
-import pygame
-import random
-import collections  # For queue in BFS
+import pygame  # استيراد مكتبة pygame لعمل الرسوميات والتفاعل مع اللعبة
+import random  # استيراد مكتبة random لاختيار أماكن عشوائية للطعام
+import collections  # استيراد مكتبة collections لاستخدام deque في خوارزمية البحث BFS
 
-# Game Setup
-pygame.init()
-WIDTH, HEIGHT = 800, 600
-GRID_SIZE = 20
-GRID_WIDTH = WIDTH // GRID_SIZE
-GRID_HEIGHT = HEIGHT // GRID_SIZE
+# إعدادات اللعبة
+pygame.init()  # تهيئة pygame
+WIDTH, HEIGHT = 800, 600  # تحديد عرض وطول الشاشة
+GRID_SIZE = 20  # تحديد حجم الخلية في الشبكة
+GRID_WIDTH = WIDTH // GRID_SIZE  # عدد الخلايا في العرض
+GRID_HEIGHT = HEIGHT // GRID_SIZE  # عدد الخلايا في الطول
 
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+# الألوان
+BLACK = (0, 0, 0)  # اللون الأسود
+WHITE = (255, 255, 255)  # اللون الأبيض
+RED = (255, 0, 0)  # اللون الأحمر
+GREEN = (0, 255, 0)  # اللون الأخضر
+BLUE = (0, 0, 255)  # اللون الأزرق
 
-# Screen Setup
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Snake Pathfinding for Beginners')
+# إعدادات الشاشة
+screen = pygame.display.set_mode((WIDTH, HEIGHT))  # إنشاء نافذة اللعبة بحجم العرض والطول
+pygame.display.set_caption('Snake Pathfinding for Beginners')  # وضع عنوان للنافذة
 
-# Simple Breadth-First Search (BFS) Pathfinder
+# خوارزمية بحث المستوى الأول (BFS) لاكتشاف المسار
 class SimplePathfinder:
     @staticmethod
     def find_path(start, goal, snake_body):
         """
-        Simple Breadth-First Search to find path
-        Explanation:
-        1. Start at snake's head
-        2. Try to find shortest path to food
-        3. Avoid snake's body and game boundaries
+        خوارزمية BFS لاكتشاف المسار
+        الشرح:
+        1. نبدأ من رأس الثعبان
+        2. نبحث عن أقصر مسار للطعام
+        3. نتجنب جسم الثعبان وحدود اللعبة
         """
-        # Possible moves: right, left, down, up
+        # الحركات الممكنة: اليمين، اليسار، الأسفل، الأعلى
         moves = [(1,0), (-1,0), (0,1), (0,-1)]
         
-        # Queue to explore paths
+        # قائمة للاستكشاف (queue)
         queue = collections.deque([[start]])
         
-        # Keep track of visited positions
+        # تتبع الأماكن التي تم زيارتها
         visited = set([start])
         
         while queue:
-            # Get current path
+            # الحصول على المسار الحالي
             path = queue.popleft()
             
-            # Last position in current path
+            # آخر مكان في المسار الحالي
             current = path[-1]
             
-            # Found the goal!
+            # إذا وصلنا للهدف (الطعام)
             if current == goal:
-                return path[1:]  # Skip first position (current head)
+                return path[1:]  # تجاهل أول موضع (الرأس الحالي)
             
-            # Try all possible moves
+            # تجربة جميع الحركات الممكنة
             for move in moves:
-                # Calculate next position
+                # حساب الموضع التالي
                 next_pos = (current[0] + move[0], current[1] + move[1])
                 
-                # Check if move is valid:
-                # 1. Inside game boundaries
-                # 2. Not in snake's body
-                # 3. Not already visited
+                # التحقق إذا كانت الحركة صالحة:
+                # 1. داخل حدود اللعبة
+                # 2. ليست داخل جسم الثعبان
+                # 3. لم يتم زيارته مسبقاً
                 if (0 <= next_pos[0] < GRID_WIDTH and 
                     0 <= next_pos[1] < GRID_HEIGHT and 
                     next_pos not in snake_body and 
                     next_pos not in visited):
                     
-                    # Create new path
+                    # إنشاء مسار جديد
                     new_path = list(path)
                     new_path.append(next_pos)
                     
-                    # Add to queue and mark as visited
+                    # إضافته إلى القائمة (queue) ووضعه في الأماكن التي تم زيارتها
                     queue.append(new_path)
                     visited.add(next_pos)
         
-        # No path found
+        # إذا لم نجد مساراً
         return []
 
-# Snake Class with Simple Pathfinding
+# فئة الثعبان مع خوارزمية BFS لاكتشاف المسار
 class Snake:
     def __init__(self):
-        # Start in middle of screen
+        # يبدأ الثعبان في منتصف الشاشة
         self.body = [(GRID_WIDTH // 2, GRID_HEIGHT // 2)]
-        self.direction = (1, 0)  # Start moving right
-        self.path_to_food = []  # Path to food
+        self.direction = (1, 0)  # يبدأ الحركة إلى اليمين
+        self.path_to_food = []  # مسار الوصول للطعام
         self.grow_to = 0
 
     def find_path_to_food(self, food_position):
         """
-        Find path to food using BFS
-        Easy explanation:
-        - Look for shortest route to food
-        - Avoid running into myself
+        البحث عن المسار إلى الطعام باستخدام BFS
+        الشرح:
+        - البحث عن أقصر طريق للطعام
+        - تجنب الاصطدام بجسم الثعبان
         """
         self.path_to_food = SimplePathfinder.find_path(
-            self.body[0],  # Start from head
-            food_position,  # Goal is food
-            self.body[1:]   # Avoid my body
+            self.body[0],  # بداية من رأس الثعبان
+            food_position,  # الهدف هو الطعام
+            self.body[1:]   # تجنب جسم الثعبان
         )
 
     def move(self):
-        # If we have a path, follow it
+        # إذا كان لدينا مسار، نتبعه
         if self.path_to_food:
-            # Set direction to next step
+            # تحديد الاتجاه للخطوة التالية
             next_pos = self.path_to_food[0]
             self.direction = (
                 next_pos[0] - self.body[0][0],
                 next_pos[1] - self.body[0][1]
             )
-            self.path_to_food.pop(0)  # Remove first step
+            self.path_to_food.pop(0)  # إزالة أول خطوة
         
-        # Move snake
+        # تحريك الثعبان
         head = self.body[0]
         new_head = (head[0] + self.direction[0], head[1] + self.direction[1])
         self.body.insert(0, new_head)
 
-        # Grow or shrink
+        # النمو أو التقلص
         if self.grow_to > 0:
             self.grow_to -= 1
         else:
             self.body.pop()
 
     def grow(self):
-        # Make snake longer
+        # إطالة الثعبان
         self.grow_to += 1
 
     def check_collision(self):
         head = self.body[0]
-        # Hit wall
+        # الاصطدام بالجدار
         if (head[0] < 0 or head[0] >= GRID_WIDTH or 
             head[1] < 0 or head[1] >= GRID_HEIGHT):
             return True
         
-        # Hit myself
+        # الاصطدام بنفسه
         if head in self.body[1:]:
             return True
         
@@ -143,10 +143,10 @@ class Snake:
                              (segment[0]*GRID_SIZE, segment[1]*GRID_SIZE, 
                               GRID_SIZE-1, GRID_SIZE-1))
 
-# Food Class
+# فئة الطعام
 class Food:
     def __init__(self, snake):
-        # Create food away from snake
+        # إنشاء الطعام بعيداً عن جسم الثعبان
         self.position = self.generate_position(snake)
 
     def generate_position(self, snake):
@@ -163,59 +163,59 @@ class Food:
                          (self.position[0]*GRID_SIZE, self.position[1]*GRID_SIZE, 
                           GRID_SIZE-1, GRID_SIZE-1))
 
-# Main Game Loop
+# الحلقة الرئيسية للعبة
 def main():
-    snake = Snake()
-    food = Food(snake)
-    score = 0
-    font = pygame.font.Font(None, 36)
+    snake = Snake()  # إنشاء كائن الثعبان
+    food = Food(snake)  # إنشاء كائن الطعام
+    score = 0  # وضع النتيجة الابتدائية
+    font = pygame.font.Font(None, 36)  # إعداد الخط لعرض النص
 
-    running = True
+    running = True  # تشغيل اللعبة
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                running = False  # إنهاء اللعبة إذا أغلق المستخدم النافذة
 
-        # Find path to food
+        # البحث عن المسار للطعام
         snake.find_path_to_food(food.position)
         
-        # Move snake
+        # تحريك الثعبان
         snake.move()
 
-        # Eat food
+        # إذا وصل الثعبان إلى الطعام
         if snake.body[0] == food.position:
-            snake.grow()
-            food = Food(snake)
-            score += 1
+            snake.grow()  # زيادة طول الثعبان
+            food = Food(snake)  # إعادة إنشاء طعام جديد
+            score += 1  # زيادة النتيجة
 
-        # Check game over
+        # التحقق إذا انتهت اللعبة بسبب الاصطدام
         if snake.check_collision():
             running = False
 
-        # Drawing
-        screen.fill(BLACK)
-        snake.draw(screen)
-        food.draw(screen)
+        # الرسم
+        screen.fill(BLACK)  # ملء الشاشة باللون الأسود
+        snake.draw(screen)  # رسم الثعبان
+        food.draw(screen)  # رسم الطعام
 
-        # Show score
+        # عرض النتيجة
         score_text = font.render(f'Score: {score}', True, WHITE)
         screen.blit(score_text, (10, 10))
 
-        pygame.display.flip()
-        clock.tick(10)  # Game speed
+        pygame.display.flip()  # تحديث الشاشة
+        clock.tick(10)  # تحديد سرعة اللعبة
 
-    # Game over screen
-    screen.fill(BLACK)
-    game_over_text = font.render('Game Over!', True, WHITE)
-    final_score_text = font.render(f'Final Score: {score}', True, WHITE)
-    screen.blit(game_over_text, (WIDTH//2 - 100, HEIGHT//2 - 50))
-    screen.blit(final_score_text, (WIDTH//2 - 100, HEIGHT//2 + 50))
+    # شاشة النهاية
+    screen.fill(BLACK)  # ملء الشاشة باللون الأسود
+    game_over_text = font.render('Game Over!', True, WHITE)  # نص "انتهت اللعبة"
+    final_score_text = font.render(f'Final Score: {score}', True, WHITE)  # النص الخاص بالنتيجة النهائية
+    screen.blit(game_over_text, (WIDTH//2 - 100, HEIGHT//2 - 50))  # عرض "انتهت اللعبة"
+    screen.blit(final_score_text, (WIDTH//2 - 100, HEIGHT//2 + 50))  # عرض النتيجة النهائية
     pygame.display.flip()
 
-    pygame.time.wait(2000)
-    pygame.quit()
+    pygame.time.wait(2000)  # الانتظار لمدة 2 ثانية قبل إغلاق اللعبة
+    pygame.quit()  # إغلاق pygame
 
-# Create clock and run game
+# إنشاء الساعة وتشغيل اللعبة
 clock = pygame.time.Clock()
 if __name__ == "__main__":
-    main()
+    main()  # بدء اللعبة
