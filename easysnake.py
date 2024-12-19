@@ -18,7 +18,11 @@ BLUE = (0, 0, 255)  # اللون الأزرق
 
 # إعدادات الشاشة
 screen = pygame.display.set_mode((WIDTH, HEIGHT))  # إنشاء نافذة اللعبة بحجم العرض والطول
-pygame.display.set_caption('Snake Pathfinding for Beginners')  # وضع عنوان للنافذة
+pygame.display.set_caption('AI PROJECT')  # وضع عنوان للنافذة
+
+# تحميل صورة الخلفية
+bg_image = pygame.image.load('bg.png')  # تحميل صورة الخلفية
+bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))  # تعديل حجم الصورة لتغطية الشاشة
 
 # خوارزمية بحث المستوى الأول (BFS) لاكتشاف المسار
 class SimplePathfinder:
@@ -35,27 +39,23 @@ class SimplePathfinder:
         moves = [(1,0), (-1,0), (0,1), (0,-1)]
         
         # قائمة للاستكشاف (queue)
-        queue = collections.deque([[start]])
-        
-        # تتبع الأماكن التي تم زيارتها
-        visited = set([start])
-        
+        queue = collections.deque([[start]])  # قائمة انتظار لتمثيل المسارات
+        visited = set([start])  # تتبع الأماكن التي تم زيارتها
+
         while queue:
             # الحصول على المسار الحالي
-            path = queue.popleft()
-            
-            # آخر مكان في المسار الحالي
-            current = path[-1]
-            
+            path = queue.popleft()  # أخذ المسار الحالي من القائمة
+            current = path[-1]  # الحصول على آخر مكان في المسار الحالي
+
             # إذا وصلنا للهدف (الطعام)
             if current == goal:
                 return path[1:]  # تجاهل أول موضع (الرأس الحالي)
-            
+
             # تجربة جميع الحركات الممكنة
             for move in moves:
                 # حساب الموضع التالي
                 next_pos = (current[0] + move[0], current[1] + move[1])
-                
+
                 # التحقق إذا كانت الحركة صالحة:
                 # 1. داخل حدود اللعبة
                 # 2. ليست داخل جسم الثعبان
@@ -80,10 +80,10 @@ class SimplePathfinder:
 class Snake:
     def __init__(self):
         # يبدأ الثعبان في منتصف الشاشة
-        self.body = [(GRID_WIDTH // 2, GRID_HEIGHT // 2)]
+        self.body = [(GRID_WIDTH // 2, GRID_HEIGHT // 2)]  # جسم الثعبان مبدئياً يتكون من خلية واحدة
         self.direction = (1, 0)  # يبدأ الحركة إلى اليمين
         self.path_to_food = []  # مسار الوصول للطعام
-        self.grow_to = 0
+        self.grow_to = 0  # متغير لتحديد ما إذا كان الثعبان يحتاج للنمو
 
     def find_path_to_food(self, food_position):
         """
@@ -104,44 +104,45 @@ class Snake:
             # تحديد الاتجاه للخطوة التالية
             next_pos = self.path_to_food[0]
             self.direction = (
-                next_pos[0] - self.body[0][0],
+                next_pos[0] - self.body[0][0],  # حساب الفرق بين الرأس الحالي والموقع التالي
                 next_pos[1] - self.body[0][1]
             )
-            self.path_to_food.pop(0)  # إزالة أول خطوة
-        
+            self.path_to_food.pop(0)  # إزالة أول خطوة من المسار
+
         # تحريك الثعبان
-        head = self.body[0]
-        new_head = (head[0] + self.direction[0], head[1] + self.direction[1])
-        self.body.insert(0, new_head)
+        head = self.body[0]  # رأس الثعبان الحالي
+        new_head = (head[0] + self.direction[0], head[1] + self.direction[1])  # حساب الموضع الجديد للرأس
+        self.body.insert(0, new_head)  # إضافة الرأس الجديد إلى مقدمة الجسم
 
         # النمو أو التقلص
         if self.grow_to > 0:
-            self.grow_to -= 1
+            self.grow_to -= 1  # إذا كان هناك حاجة لنمو الثعبان، لا نقوم بحذف الجزء الأخير
         else:
-            self.body.pop()
+            self.body.pop()  # إذا لم يكن هناك حاجة للنمو، نحذف الجزء الأخير من الجسم
 
     def grow(self):
         # إطالة الثعبان
-        self.grow_to += 1
+        self.grow_to += 1  # زيادة عدد الأجزاء التي يجب أن يزداد بها الجسم
 
     def check_collision(self):
-        head = self.body[0]
+        head = self.body[0]  # رأس الثعبان
         # الاصطدام بالجدار
         if (head[0] < 0 or head[0] >= GRID_WIDTH or 
             head[1] < 0 or head[1] >= GRID_HEIGHT):
-            return True
-        
+            return True  # إذا خرج الرأس عن حدود الشاشة
+
         # الاصطدام بنفسه
         if head in self.body[1:]:
-            return True
-        
-        return False
+            return True  # إذا اصطدم الرأس بجسم الثعبان نفسه
+
+        return False  # لا يوجد اصطدام
 
     def draw(self, screen):
-        for segment in self.body:
+        # رسم الثعبان على الشاشة
+        for segment in self.body:  # لكل جزء من أجزاء الجسم
             pygame.draw.rect(screen, GREEN, 
                              (segment[0]*GRID_SIZE, segment[1]*GRID_SIZE, 
-                              GRID_SIZE-1, GRID_SIZE-1))
+                              GRID_SIZE-1, GRID_SIZE-1))  # رسم كل جزء من جسم الثعبان
 
 # فئة الطعام
 class Food:
@@ -152,16 +153,17 @@ class Food:
     def generate_position(self, snake):
         while True:
             position = (
-                random.randint(0, GRID_WIDTH-1), 
+                random.randint(0, GRID_WIDTH-1),  # تحديد موقع عشوائي للطعام
                 random.randint(0, GRID_HEIGHT-1)
             )
-            if position not in snake.body:
+            if position not in snake.body:  # التأكد من أن الطعام لا يتواجد داخل جسم الثعبان
                 return position
 
     def draw(self, screen):
+        # رسم الطعام على الشاشة
         pygame.draw.rect(screen, RED, 
                          (self.position[0]*GRID_SIZE, self.position[1]*GRID_SIZE, 
-                          GRID_SIZE-1, GRID_SIZE-1))
+                          GRID_SIZE-1, GRID_SIZE-1))  # رسم الطعام بلون أحمر
 
 # الحلقة الرئيسية للعبة
 def main():
@@ -172,7 +174,7 @@ def main():
 
     running = True  # تشغيل اللعبة
     while running:
-        for event in pygame.event.get():
+        for event in pygame.event.get():  # معالجة الأحداث (مثل إغلاق النافذة)
             if event.type == pygame.QUIT:
                 running = False  # إنهاء اللعبة إذا أغلق المستخدم النافذة
 
@@ -194,6 +196,7 @@ def main():
 
         # الرسم
         screen.fill(BLACK)  # ملء الشاشة باللون الأسود
+        screen.blit(bg_image, (0, 0))  # رسم الخلفية
         snake.draw(screen)  # رسم الثعبان
         food.draw(screen)  # رسم الطعام
 
@@ -210,6 +213,7 @@ def main():
     final_score_text = font.render(f'Final Score: {score}', True, WHITE)  # النص الخاص بالنتيجة النهائية
     screen.blit(game_over_text, (WIDTH//2 - 100, HEIGHT//2 - 50))  # عرض "انتهت اللعبة"
     screen.blit(final_score_text, (WIDTH//2 - 100, HEIGHT//2 + 50))  # عرض النتيجة النهائية
+    screen.blit(bg_image, (0, 0))  # رسم الخلفية مرة أخرى
     pygame.display.flip()
 
     pygame.time.wait(2000)  # الانتظار لمدة 2 ثانية قبل إغلاق اللعبة
