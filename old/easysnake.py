@@ -2,6 +2,7 @@ import pygame  # استيراد مكتبة pygame لعمل الرسوميات و
 import random  # استيراد مكتبة random لاختيار أماكن عشوائية للطعام
 import collections  # استيراد مكتبة collections لاستخدام deque في خوارزمية البحث BFS
 
+
 # إعدادات اللعبة
 pygame.init()  # تهيئة pygame
 WIDTH, HEIGHT = 800, 600  # تحديد عرض وطول الشاشة
@@ -23,6 +24,7 @@ pygame.display.set_caption('AI PROJECT')  # وضع عنوان للنافذة
 # تحميل صورة الخلفية
 bg_image = pygame.image.load('bg.png')  # تحميل صورة الخلفية
 bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))  # تعديل حجم الصورة لتغطية الشاشة
+
 
 # خوارزمية بحث المستوى الأول (BFS) لاكتشاف المسار
 class SimplePathfinder:
@@ -75,6 +77,7 @@ class SimplePathfinder:
         
         # إذا لم نجد مساراً
         return []
+
 
 # فئة الثعبان مع خوارزمية BFS لاكتشاف المسار
 class Snake:
@@ -144,6 +147,7 @@ class Snake:
                              (segment[0]*GRID_SIZE, segment[1]*GRID_SIZE, 
                               GRID_SIZE-1, GRID_SIZE-1))  # رسم كل جزء من جسم الثعبان
 
+
 # فئة الطعام
 class Food:
     def __init__(self, snake):
@@ -164,6 +168,7 @@ class Food:
         pygame.draw.rect(screen, RED, 
                          (self.position[0]*GRID_SIZE, self.position[1]*GRID_SIZE, 
                           GRID_SIZE-1, GRID_SIZE-1))  # رسم الطعام بلون أحمر
+
 
 # الحلقة الرئيسية للعبة
 def main():
@@ -218,6 +223,7 @@ def main():
 
     pygame.time.wait(2000)  # الانتظار لمدة 2 ثانية قبل إغلاق اللعبة
     pygame.quit()  # إغلاق pygame
+
 
 # إنشاء الساعة وتشغيل اللعبة
 clock = pygame.time.Clock()
